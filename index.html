@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>창의 수학 문제집 | 중1 심화수학반</title>
+  <meta name="description" content="중학교 1학년 심화수학반을 위한 창의적이고 도전적인 수학 문제 모음입니다. 사고력과 논리력을 키워보세요!" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 배경 파티클 -->
+  <div class="bg-particles" id="bgParticles"></div>
+
+  <!-- 헤더 -->
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">∑</span>
+        <span class="logo-text">창의<strong>수학</strong></span>
+      </div>
+
+      <div class="score-badge" id="scoreBadge">
+        <span class="score-icon">🏆</span>
+        <span class="score-label">획득 점수</span>
+        <span class="score-value" id="totalScore">0</span>
+      </div>
+      <button class="teacher-lock-btn" id="teacherLockBtn" title="선생님 모드" aria-label="선생님 모드">
+        🔒
+      </button>
+    </div>
+  </header>
+
+  <!-- 선생님 모드 활성화 배너 -->
+  <div class="teacher-banner" id="teacherBanner">
+    <span>🎓 선생님 모드 활성화 중 — 모든 답과 풀이가 공개됩니다</span>
+    <button class="teacher-banner-off" id="teacherModeOff">모드 해제</button>
+  </div>
+
+  <!-- 히어로 섹션 -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-tag">중1 심화수학반 전용</div>
+      <h1 class="hero-title">
+        <span class="title-line">생각을 깨우는</span>
+        <span class="title-line gradient-text">창의 수학</span>
+        <span class="title-line">문제 모음</span>
+      </h1>
+      <p class="hero-desc">단순 계산을 넘어, 논리력과 창의력을 자극하는<br/>특별한 수학 문제들을 풀어보세요.</p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-num" id="totalProblems">0</span>
+          <span class="stat-label">전체 문제</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num" id="solvedCount">0</span>
+          <span class="stat-label">푼 문제</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-num" id="correctCount">0</span>
+          <span class="stat-label">정답</span>
+        </div>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+    </div>
+    <div class="hero-deco">
+      <div class="floating-formula" style="--delay:0s">x² + y² = r²</div>
+      <div class="floating-formula" style="--delay:1.2s">∑(n=1 to ∞)</div>
+      <div class="floating-formula" style="--delay:2.4s">a² + b² = c²</div>
+      <div class="floating-formula" style="--delay:0.6s">∫f(x)dx</div>
+      <div class="floating-formula" style="--delay:1.8s">π ≈ 3.14159</div>
+    </div>
+  </section>
+
+  <!-- 문제 그리드 -->
+  <main class="main-content">
+    <div class="section-header">
+      <h2 class="section-title">문제 목록</h2>
+      <div class="difficulty-legend">
+        <span class="legend-item"><span class="dot d1"></span>기본</span>
+        <span class="legend-item"><span class="dot d2"></span>중급</span>
+        <span class="legend-item"><span class="dot d3"></span>심화</span>
+        <span class="legend-item"><span class="dot d4"></span>도전</span>
+      </div>
+    </div>
+    <div class="problems-grid" id="problemsGrid">
+      <!-- JS로 카드 삽입 -->
+    </div>
+  </main>
+
+  <!-- 문제 모달 -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" id="modalClose" aria-label="닫기">✕</button>
+      <div class="modal-header">
+        <div class="modal-meta">
+          <span class="modal-difficulty" id="modalDifficulty"></span>
+          <span class="modal-points" id="modalPoints"></span>
+        </div>
+        <h2 class="modal-title" id="modalTitle"></h2>
+      </div>
+      <div class="modal-body">
+        <div class="problem-text" id="problemText"></div>
+        <div class="hint-section" id="hintSection">
+          <button class="hint-btn" id="hintBtn">💡 힌트 보기</button>
+          <div class="hint-content" id="hintContent"></div>
+        </div>
+        <div class="answer-section">
+          <div class="submit-guide" id="submitGuideText" style="display:none"></div>
+          <div class="sub-answers" id="subAnswersContainer"></div>
+          <button class="submit-btn" id="submitBtn">제출하기</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div class="solution-section" id="solutionSection">
+          <h3 class="solution-title">📝 풀이 설명</h3>
+          <div class="solution-text" id="solutionText"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 정답 축하 오버레이 -->
+  <div class="confetti-overlay" id="confettiOverlay"></div>
+
+  <!-- 선생님 비밀번호 모달 -->
+  <div class="teacher-modal-overlay" id="teacherModalOverlay">
+    <div class="teacher-modal" id="teacherModal">
+      <button class="modal-close" id="teacherModalClose" aria-label="닫기">✕</button>
+      <div class="teacher-modal-icon">🔐</div>
+      <h2 class="teacher-modal-title">선생님 모드</h2>
+      <p class="teacher-modal-desc">비밀번호를 입력하면 모든 문제의 답과 풀이가 즉시 공개됩니다.</p>
+      <input class="teacher-pw-input" type="password" id="teacherPwInput"
+        placeholder="비밀번호 입력" autocomplete="off" maxlength="20" />
+      <div class="teacher-pw-error" id="teacherPwError"></div>
+      <button class="teacher-pw-submit" id="teacherPwSubmit">확인</button>
+    </div>
+  </div>
+
+  <!-- 마리오 게임 오버레이 -->
+  <div class="mario-overlay" id="marioOverlay">
+    <div class="mario-wrapper">
+      <div class="mario-header">
+        <div class="mario-title-bar">
+          <span class="mario-icon">🎮</span>
+          <span class="mario-title-text">마리오 미니 게임</span>
+          <span class="mario-subtitle">수학 정답 보상!</span>
+        </div>
+        <button class="mario-close-btn" id="marioClose" aria-label="게임 닫기">✕ 닫기</button>
+      </div>
+      <div class="mario-canvas-wrap">
+        <canvas id="marioCanvas" width="860" height="440"></canvas>
+        <div class="mario-controls" id="marioControls">
+          <div class="mario-dpad">
+            <button class="mario-ctrl-btn mario-ctrl-left" id="mCtrlLeft" aria-label="왼쪽으로 이동">◀</button>
+            <button class="mario-ctrl-btn mario-ctrl-right" id="mCtrlRight" aria-label="오른쪽으로 이동">▶</button>
+          </div>
+          <button class="mario-ctrl-btn mario-ctrl-jump" id="mCtrlJump" aria-label="점프">⤒<span>점프</span></button>
+        </div>
+      </div>
+      <div class="mario-footer">
+        <span>⌨️ ← → / A D → 이동 &nbsp;|&nbsp; Space / ↑ / W → 점프</span>
+        <span>🕹️ 화면 아래 버튼으로도 직접 조작 가능! &nbsp;|&nbsp; 🚩 깃대를 잡고 미끄러져 내려가 성에 도착하면 클리어</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="site-footer">
+    <p>중1 심화수학반 창의 수학 문제집 &copy; 2026 &nbsp;|&nbsp; 수학의 아름다움을 발견하세요 ✨</p>
+  </footer>
+
+  <script src="problems.js"></script>
+  <script src="mario-game.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
