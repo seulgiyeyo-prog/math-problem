@@ -543,3 +543,92 @@ document.addEventListener('DOMContentLoaded', () => {
   // 선생님 모드 해제 배너 버튼
   _on('teacherModeOff', 'click', deactivateTeacherMode);
 });
+// ✅ app.js 하단 수정 코드: 안전한 이벤트 바인딩 및 이벤트 위임 적용
+
+// 요소가 없어도 에러로 나머지 이벤트 등록이 막히지 않도록 하는 안전한 바인더
+function _on(id, event, handler) {
+  const el = document.getElementById(id);
+  if (!el) {
+    console.warn(`[app.js] #${id} 요소를 찾을 수 없습니다.`);
+    return;
+  }
+  el.addEventListener(event, handler);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  try { createParticles(); } catch (err) {}
+  try { renderGrid(); } catch (err) {}
+
+  // 모달 닫기
+  _on('modalClose', 'click', closeModal);
+  _on('modalOverlay', 'click', e => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  });
+
+  // ESC 키로 닫기
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // 힌트 버튼
+  _on('hintBtn', 'click', () => {
+    const hintContent = document.getElementById('hintContent');
+    const hintBtn = document.getElementById('hintBtn');
+    const pid = state.currentProblemId;
+    if (hintContent.classList.contains('visible')) {
+      hintContent.classList.remove('visible');
+      hintBtn.textContent = '💡 힌트 보기';
+      if (pid) delete state.hintShown[pid];
+    } else {
+      hintContent.classList.add('visible');
+      hintBtn.textContent = '💡 힌트 닫기';
+      if (pid) state.hintShown[pid] = true;
+    }
+  });
+
+  // 제출 버튼
+  _on('submitBtn', 'click', submitAnswer);
+
+  // ✅ 핵심 해결: #answerInput은 동적으로 생성되므로 document에 이벤트를 위임합니다.
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target && e.target.id === 'answerInput') {
+      submitAnswer();
+    }
+  });
+
+  // 마리오 게임 닫기
+  _on('marioClose', 'click', closeMarioGame);
+  _on('marioOverlay', 'click', e => {
+    if (e.target === document.getElementById('marioOverlay')) closeMarioGame();
+  });
+
+  // ✅ 선생님 모드 이벤트 정상 동작
+  _on('teacherLockBtn', 'click', () => {
+    if (state.teacherMode) deactivateTeacherMode();
+    else openTeacherModal();
+  });
+
+  _on('teacherModalClose', 'click', closeTeacherModal);
+  _on('teacherModalOverlay', 'click', e => {
+    if (e.target === document.getElementById('teacherModalOverlay')) closeTeacherModal();
+  });
+
+  _on('teacherPwSubmit', 'click', () => {
+    const pw = document.getElementById('teacherPwInput').value;
+    if (_verifyTeacher(pw)) {
+      activateTeacherMode();
+    } else {
+      const errEl = document.getElementById('teacherPwError');
+      errEl.textContent = '❌ 비밀번호가 올바르지 않습니다.';
+      document.getElementById('teacherPwInput').value = '';
+      document.getElementById('teacherPwInput').focus();
+      setTimeout(() => { errEl.textContent = ''; }, 2500);
+    }
+  });
+
+  _on('teacherPwInput', 'keydown', e => {
+    if (e.key === 'Enter') document.getElementById('teacherPwSubmit').click();
+  });
+
+  _on('teacherModeOff', 'click', deactivateTeacherMode);
+});
