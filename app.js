@@ -492,9 +492,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // 제출 버튼
   _on('submitBtn', 'click', submitAnswer);
 
-  // Enter 키로 제출
-  _on('answerInput', 'keydown', e => {
-    if (e.key === 'Enter') submitAnswer();
+  // Enter 키로 제출 — #answerInput은 모달을 열 때마다 동적으로 새로 생성되므로
+  // document에 위임(delegation)해서 언제 생성되든 항상 동작하게 함
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target && e.target.id === 'answerInput') {
+      submitAnswer();
+    }
   });
 
   // 마리오 게임 닫기 버튼
