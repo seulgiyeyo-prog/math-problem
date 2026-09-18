@@ -1,119 +1,119 @@
 // ============================================================
 //  창의 수학 문제집 — 메인 앱 (app.js)
-//  - 자물쇠(선생님 모드) 클릭 이벤트 오류 해결 (안전한 이벤트 위임)
-//  - 모든 소문제((1), (2), (3)) 교사용 정답 모달 및 카드 표시
+//  - "최종 채점 대상" 완전 제거: 모든 소문제 개별 채점 & 점수 부여
+//  - 소문제별 정답 판정 & 교사용 정답 완벽 지원
 // ============================================================
 
-// ── 소문제별 선생님 정답 데이터베이스 ────────────────────────
-const SUB_ANSWERS_DATA = {
+// ── 소문제별 배점, 정답 기준 및 교사용 정답 데이터 ────────────────────────
+const SUB_CONFIG = {
   1: {
-    1: "15 (1+2+...+9 = 45, 45÷3 = 15)",
-    2: "5 (가로, 세로, 대각선 총 4줄에 포함되므로 가운데는 5)",
-    3: "2, 7, 6 / 9, 5, 1 / 4, 3, 8"
+    1: { points: 10, answer: "15", valids: ["15"] },
+    2: { points: 10, answer: "5 (가운데)", valids: ["5", "5 (가운데)", "가운데 5", "숫자 5"] },
+    3: { points: 10, answer: "2, 7, 6 / 9, 5, 1 / 4, 3, 8", valids: ["완성", "5", "확인", "성공", "15", "2, 7, 6 / 9, 5, 1 / 4, 3, 8", "마방진"] }
   },
   2: {
-    1: "A 거짓말 가정 시 모순, C 거짓말 가정 시 모순, B 거짓말 가정 시 모든 조건 성립",
-    2: "B"
+    1: { points: 10, answer: "A, C 모순 발생 / B 거짓말 시 성립", valids: ["b", "성립", "모순", "확인", "b만 거짓말", "b가 거짓말쟁이", "b 거짓말"] },
+    2: { points: 10, answer: "B", valids: ["b", "b가 거짓말쟁이"] }
   },
   3: {
-    1: "1 (1개), 4 (3개), 9 (3개)",
-    2: "10개 (1², 2², 3², ..., 10²)",
-    3: "약수는 보통 a와 n/a의 쌍(짝수 개)이지만 a=n/a인 완전제곱수만 단독 약수를 가져 홀수 개가 됨"
+    1: { points: 10, answer: "1, 4, 9", valids: ["1, 4, 9", "1,4,9", "1 4 9", "1, 4, 9개", "1,4,9 (3개)"] },
+    2: { points: 10, answer: "10개", valids: ["10", "10개"] },
+    3: { points: 10, answer: "제곱수 (쌍이 없는 제곱근 약수)", valids: ["제곱수", "완전제곱수", "제곱", "쌍"] }
   },
   4: {
-    1: "72개 (LCM(18, 24) = 72)",
-    2: "A: 4바퀴, B: 3바퀴",
-    3: "360개 (LCM(18, 24, 30) = 360)"
+    1: { points: 10, answer: "72개 (LCM(18, 24) = 72)", valids: ["72", "72개"] },
+    2: { points: 10, answer: "A: 4바퀴, B: 3바퀴", valids: ["4, 3", "4,3", "4 3", "4바퀴 3바퀴", "4", "3", "a: 4, b: 3", "a 4, b 3", "4바퀴, 3바퀴"] },
+    3: { points: 10, answer: "360개 (LCM(18, 24, 30) = 360)", valids: ["360", "360개"] }
   },
   5: {
-    1: "2.4초 (12/5초)",
-    2: "-2.2 (또는 -11/5)",
-    3: "-11/12"
+    1: { points: 10, answer: "2.4초 (12/5초)", valids: ["2.4", "2.4초", "12/5", "12/5초"] },
+    2: { points: 10, answer: "-2.2 (또는 -11/5)", valids: ["-2.2", "-11/5", "-2.2 지점"] },
+    3: { points: 10, answer: "-11/12", valids: ["-11/12", "-5.5", "-5.5초"] }
   },
   6: {
-    1: "가운데 p에 따라 2+p, p+5, 2p+7이 모두 소수가 되는 수 탐색 (맨 위 최소 소수는 19)",
-    2: "19",
-    3: "p=2이면 2+p=4(합성수)가 되므로 불가"
+    1: { points: 10, answer: "p=3 또는 p=11", valids: ["3", "11", "17", "소수", "19", "가능"] },
+    2: { points: 10, answer: "19", valids: ["19"] },
+    3: { points: 10, answer: "2+2=4(합성수)가 되므로 불가", valids: ["합성수", "짝수", "4", "2+2=4", "소수가 아님"] }
   },
   7: {
-    1: "1275 (50×51÷2)",
-    2: "47 (1275 - 1228)",
-    3: "23과 24 (n + (n+1) = 47 → 2n = 46 → n = 23)"
+    1: { points: 10, answer: "1275", valids: ["1275"] },
+    2: { points: 10, answer: "47", valids: ["47"] },
+    3: { points: 10, answer: "23, 24", valids: ["23, 24", "23,24", "23 24", "23과 24", "22, 23", "22,23", "22과 23"] }
   },
   8: {
-    1: "n=2: 1개, n=3: 3개, n=4: 6개, n=5: 10개",
-    2: "n(n-1)/2",
-    3: "15 (15×14/2 = 105 > 100)"
+    1: { points: 10, answer: "1, 3, 6, 10개", valids: ["1, 3, 6, 10", "1,3,6,10", "10", "1 3 6 10"] },
+    2: { points: 10, answer: "n(n-1)/2", valids: ["n(n-1)/2", "n*(n-1)/2", "n(n-1)÷2"] },
+    3: { points: 10, answer: "15", valids: ["15"] }
   },
   9: {
-    1: "x = 8 또는 x = -2",
-    2: "x = -5 또는 x = 1",
-    3: "x = -1 또는 x = 5 (음수 해: -1)"
+    1: { points: 10, answer: "x = 8 또는 x = -2", valids: ["8, -2", "8,-2", "-2, 8", "-2,8", "8과 -2", "-2와 8", "8", "-2"] },
+    2: { points: 10, answer: "x = -5 또는 x = 1", valids: ["-5, 1", "-5,1", "1, -5", "1,-5", "1", "-5"] },
+    3: { points: 10, answer: "-1 (또는 5)", valids: ["-1", "-1, 5", "-1,5", "-1과 5", "5"] }
   },
   10: {
-    1: "3개 (AB, BC, AC)",
-    2: "n(n-1)/2",
-    3: "15개 (전체 서로 다른 점 4+3-1=6개 → 6×5/2 = 15)"
+    1: { points: 10, answer: "3개", valids: ["3", "3개"] },
+    2: { points: 10, answer: "n(n-1)/2", valids: ["n(n-1)/2", "n*(n-1)/2", "n(n-1)÷2"] },
+    3: { points: 10, answer: "15개", valids: ["15", "15개"] }
   },
   11: {
-    1: "110880 (32 × 9 × 5 × 7 × 11)",
-    2: "6자리 수이므로 8자리 YYYYMMDD 날짜가 될 수 없음",
-    3: "개인 생일/기념일 소인수분해 확인"
+    1: { points: 10, answer: "110880", valids: ["110880", "110,880"] },
+    2: { points: 10, answer: "불가능 (6자리 수)", valids: ["불가능", "안됨", "아니다", "x", "아니오", "no", "6자리"] },
+    3: { points: 10, answer: "기념일 소인수분해 확인", valids: ["확인", "완료", "성공", "제출", "소인수분해"] }
   },
   12: {
-    1: "95° (점 B를 지나는 평행선을 그어 엇각의 합 55° + 40° = 95°)"
+    1: { points: 20, answer: "95°", valids: ["95", "95°"] }
   },
   13: {
-    1: "-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7 (총 11개)",
-    2: "-5, -4, -3, -2, -1, 0, 1, 2, 3 (총 9개)",
-    3: "-3, -2, -1, 0, 1, 2, 3 (총 7개)"
+    1: { points: 10, answer: "11개", valids: ["11", "11개"] },
+    2: { points: 10, answer: "9개", valids: ["9", "9개"] },
+    3: { points: 10, answer: "7개", valids: ["7", "7개"] }
   },
   14: {
-    1: "A = 4kg, B = 10kg, C = 7kg",
-    2: "2(A+B+C) = 42 → A+B+C = 21kg 활용",
-    3: "18kg (D = 2A = 8kg이므로 B+D = 10+8 = 18kg)"
+    1: { points: 10, answer: "A=4kg, B=10kg, C=7kg", valids: ["4, 10, 7", "4,10,7", "a=4, b=10, c=7", "4 10 7", "4, 10, 7kg"] },
+    2: { points: 10, answer: "21kg", valids: ["21", "21kg", "42"] },
+    3: { points: 10, answer: "18kg", valids: ["18", "18kg"] }
   },
   15: {
-    1: "5/1 (1+2+3+4+5=15항, 분자+분모=6 그룹의 마지막)",
-    2: "24번째 (분자+분모=8 그룹, 21+3=24)",
-    3: "모든 양의 유리수 p/q는 p+q=k인 군에 반드시 속해 유한한 번호가 매겨짐"
+    1: { points: 10, answer: "5/1", valids: ["5/1", "5", "3/4"] },
+    2: { points: 10, answer: "24번째", valids: ["24", "24번째"] },
+    3: { points: 10, answer: "군수열에 유한 순번 대응", valids: ["유한", "군수열", "자연수", "대응"] }
   },
   16: {
-    1: "f(0)=15, f(1)=12, f(3)=10, f(5)=8, f(7)=10, f(9)=12, f(10)=15",
-    2: "x = 5일 때 최솟값 8",
-    3: "수직선 위 1, 5, 9 세 점으로부터의 거리 합이며 중앙값 5에서 최소"
+    1: { points: 10, answer: "최솟값 8", valids: ["8", "15", "10", "최소 8"] },
+    2: { points: 10, answer: "8", valids: ["8"] },
+    3: { points: 10, answer: "중앙값 5에서의 거리 합", valids: ["거리", "중앙값", "5"] }
   },
   17: {
-    1: "P = 0 (-3 + 12×1/4)",
-    2: "M = 3 ((-3+9)/2)",
-    3: "Q = 5 (-3 + 12×2/3)",
-    4: "P(0), M(3), Q(5) 순서로 위치하며 PM=3, MQ=2"
+    1: { points: 10, answer: "0", valids: ["0"] },
+    2: { points: 10, answer: "3", valids: ["3"] },
+    3: { points: 10, answer: "5", valids: ["5"] },
+    4: { points: 10, answer: "PM=3, MQ=2", valids: ["3, 2", "3,2", "3 2", "pm=3, mq=2"] }
   },
   18: {
-    1: "n(n-1)/2 + 1",
-    2: "175 (22부터 28까지 7개의 합)",
-    3: "8번째 줄 (29~36 합 = 260 > 200)"
+    1: { points: 10, answer: "n(n-1)/2 + 1", valids: ["n(n-1)/2+1", "n(n-1)/2 + 1"] },
+    2: { points: 10, answer: "175", valids: ["175"] },
+    3: { points: 10, answer: "8번째 줄", valids: ["8", "8번째", "8번째 줄", "9", "9번째"] }
   },
   19: {
-    1: "180°",
-    2: "36° (180° ÷ 5)",
-    3: "180° (삼각형의 외각 성질에 의해 별 꼭짓점 각의 합은 180°)"
+    1: { points: 10, answer: "180°", valids: ["180", "180°"] },
+    2: { points: 10, answer: "36°", valids: ["36", "36°"] },
+    3: { points: 10, answer: "180°", valids: ["180", "180°"] }
   },
   20: {
-    1: "N을 2,3,5,7로 나눈 나머지가 1이므로 N-1은 2,3,5,7의 공배수",
-    2: "211, 421, 631, 841 (LCM=210)",
-    3: "2104 (211 + 421 + 631 + 841)"
+    1: { points: 10, answer: "2, 3, 5, 7의 공배수", valids: ["공배수", "210의 배수", "210", "배수"] },
+    2: { points: 15, answer: "211, 421, 631, 841", valids: ["211, 421, 631, 841", "211,421,631,841", "4개"] },
+    3: { points: 15, answer: "2104", valids: ["2104", "1471"] }
   }
 };
 
 // ── 상태 관리 ──────────────────────────────
 const state = {
-  solved: {},
+  solved: {},          // 완료된 문제 { [id]: true }
+  solvedSubParts: {},  // 완료된 소문제 { ["id-part"]: true }
   incorrect: {},
   hintShown: {},
-  subAnswers: {},   // 학생 메모 답안
+  subAnswers: {},      // 학생 입력값 { [id]: { [part]: string } }
   totalScore: 0,
-  currentFilter: 'all',
   currentProblemId: null,
   teacherMode: false,
 };
@@ -122,6 +122,8 @@ const state = {
 try {
   const s = localStorage.getItem('math_solved');
   if (s) state.solved = JSON.parse(s);
+  const sp = localStorage.getItem('math_solved_subparts');
+  if (sp) state.solvedSubParts = JSON.parse(sp);
   const inc = localStorage.getItem('math_incorrect');
   if (inc) state.incorrect = JSON.parse(inc);
   const sc = localStorage.getItem('math_score');
@@ -133,18 +135,17 @@ try {
 function saveState() {
   try {
     localStorage.setItem('math_solved', JSON.stringify(state.solved));
+    localStorage.setItem('math_solved_subparts', JSON.stringify(state.solvedSubParts));
     localStorage.setItem('math_incorrect', JSON.stringify(state.incorrect));
     localStorage.setItem('math_score', state.totalScore.toString());
     localStorage.setItem('math_sub_answers', JSON.stringify(state.subAnswers));
   } catch (e) {}
 }
 
-// 비밀번호 검증 (0730)
 function _verifyTeacher(input) {
   try { return btoa(input.trim()) === 'MDczMA=='; } catch(e) { return false; }
 }
 
-// ── 난이도 별 렌더링 ──────────────────────
 function renderStars(difficulty) {
   const colors = ['', '#4ade80', '#22d3ee', '#fb923c', '#f472b6'];
   const labels = ['', '기본', '중급', '심화', '도전'];
@@ -155,123 +156,237 @@ function renderStars(difficulty) {
   return `<span title="${labels[difficulty]}">${stars}</span>`;
 }
 
-// ── 소문제(서브문제) 파싱 ──────────────────────
 function getSubPartCount(problem) {
   const matches = problem.problem.match(/<strong>\(\d+\)<\/strong>/g);
   return matches ? matches.length : 0;
 }
 
-const GRADED_PART_OVERRIDE = { 16: 2, 18: 3 };
-function getGradedPart(problem) {
-  const subCount = getSubPartCount(problem);
-  if (subCount === 0) return null;
-  if (GRADED_PART_OVERRIDE[problem.id]) return GRADED_PART_OVERRIDE[problem.id];
-  const m = problem.submitGuide && problem.submitGuide.match(/\((\d+)\)번의?\s*답만/);
-  if (m) return parseInt(m[1], 10);
-  return subCount;
+const normalize = s => s.toLowerCase().replace(/\s/g, '').replace(/,/g, '');
+
+// ── 소문제 채점 로직 ──────────────────────
+function gradeSubPart(problemId, partNum) {
+  const key = `${problemId}-${partNum}`;
+  if (state.solvedSubParts[key] || state.teacherMode) return;
+
+  const inputEl = document.getElementById(`subAnswer-${partNum}`);
+  if (!inputEl) return;
+
+  const userVal = inputEl.value.trim();
+  if (!userVal) {
+    inputEl.focus();
+    inputEl.style.borderColor = '#f472b6';
+    setTimeout(() => { inputEl.style.borderColor = ''; }, 1000);
+    return;
+  }
+
+  const problem = PROBLEMS.find(p => p.id === problemId);
+  const conf = (SUB_CONFIG[problemId] && SUB_CONFIG[problemId][partNum]) || null;
+  const normUser = normalize(userVal);
+
+  let isCorrect = false;
+  if (conf && conf.valids) {
+    isCorrect = conf.valids.some(v => {
+      const nv = normalize(v);
+      return nv === normUser || (normUser.length >= 2 && nv.includes(normUser));
+    });
+  } else if (problem) {
+    isCorrect = problem.answers.some(a => normalize(a) === normUser);
+  }
+
+  const points = conf ? conf.points : 10;
+  const rowEl = document.getElementById(`subRow-${partNum}`);
+  const statusEl = document.getElementById(`subStatus-${partNum}`);
+
+  if (isCorrect) {
+    state.solvedSubParts[key] = true;
+    state.totalScore += points;
+    saveState();
+
+    if (rowEl) {
+      rowEl.style.borderColor = '#34d399';
+      rowEl.style.background = 'rgba(52, 211, 153, 0.12)';
+    }
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:#34d399;font-weight:bold;font-size:0.8rem;">✅ 정답 (+${points}점)</span>`;
+    }
+    inputEl.disabled = true;
+
+    // 모든 소문제 해결 여부 검사
+    const subCount = getSubPartCount(problem);
+    const totalParts = subCount === 0 ? 1 : subCount;
+    let allDone = true;
+    for (let p = 1; p <= totalParts; p++) {
+      if (!state.solvedSubParts[`${problemId}-${p}`]) {
+        allDone = false;
+        break;
+      }
+    }
+
+    if (allDone) {
+      state.solved[problemId] = true;
+      delete state.incorrect[problemId];
+      saveState();
+      launchConfetti();
+      addMarioGameButton();
+      const sol = document.getElementById('solutionSection');
+      if (sol) {
+        sol.classList.add('visible');
+        document.getElementById('solutionText').innerHTML = problem.solution;
+      }
+    }
+
+    updateStats();
+  } else {
+    state.incorrect[problemId] = true;
+    saveState();
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:#f87171;font-size:0.75rem;font-weight:bold;">❌ 다시 생각해보세요</span>`;
+    }
+  }
 }
 
-// 문제 모달의 소문제별 입력창 및 선생님 모드 정답 렌더링
+// ── 모달 내 소문제별 입력 UI 빌드 ──────────
 function buildSubAnswers(problem) {
   const container = document.getElementById('subAnswersContainer');
   container.innerHTML = '';
 
   const subCount = getSubPartCount(problem);
-  const gradedPart = getGradedPart(problem);
+  const totalParts = subCount === 0 ? 1 : subCount;
   const savedNotes = state.subAnswers[problem.id] || {};
-  const teacherSubAnswers = SUB_ANSWERS_DATA[problem.id] || problem.subAnswers || {};
 
-  if (subCount === 0) {
+  const header = document.createElement('div');
+  header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;';
+  header.innerHTML = `
+    <span style="font-size:0.9rem;font-weight:bold;color:#cbd5e1;">✏️ 소문제별 답안 입력 & 채점</span>
+    <span style="font-size:0.75rem;color:#818cf8;">모든 소문제에 점수가 부여됩니다</span>
+  `;
+  container.appendChild(header);
+
+  for (let i = 1; i <= totalParts; i++) {
+    const key = `${problem.id}-${i}`;
+    const isSolved = !!state.solvedSubParts[key];
+    const conf = (SUB_CONFIG[problem.id] && SUB_CONFIG[problem.id][i]) || { points: 10, answer: problem.answer };
+    const teacherAns = conf.answer;
+
     const row = document.createElement('div');
-    row.className = 'sub-answer-row graded';
-    row.innerHTML = `
-      <label class="answer-label" for="answerInput">내 답안</label>
-      <input class="answer-input" type="text" id="answerInput" placeholder="답을 입력하세요..." autocomplete="off" />
-      ${state.teacherMode ? `
-        <div style="margin-top:6px;padding:6px 10px;border-radius:6px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;font-size:0.8rem;font-weight:bold;">
-          🟢 교사용 정답: ${problem.answer}
-        </div>` : ''}
+    row.id = `subRow-${i}`;
+    row.className = 'sub-answer-row';
+    row.style.cssText = `
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      background: ${isSolved ? 'rgba(52, 211, 153, 0.1)' : '#0f172a'};
+      border: 1px solid ${isSolved ? '#34d399' : '#334155'};
+      transition: all 0.2s;
     `;
+
+    row.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-weight:bold;color:#a5b4fc;font-family:monospace;">${subCount > 0 ? `(${i})번 문제` : '답안'}</span>
+          <span style="font-size:0.7rem;font-weight:bold;color:#fbbf24;background:rgba(251,191,36,0.15);padding:2px 8px;border-radius:999px;">🏅 ${conf.points}점</span>
+        </div>
+        <div id="subStatus-${i}">
+          ${isSolved ? `<span style="color:#34d399;font-weight:bold;font-size:0.8rem;">✅ 정답 (+${conf.points}점)</span>` : (state.teacherMode ? '<span style="color:#4ade80;font-size:0.75rem;">선생님 확인용</span>' : '')}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <input
+          type="text"
+          id="subAnswer-${i}"
+          class="answer-input"
+          style="margin:0;flex:1;padding:8px 12px;font-size:0.85rem;"
+          value="${savedNotes[i] || ''}"
+          placeholder="${isSolved ? '정답을 맞혔습니다!' : `(${i})번의 답을 입력하세요`}"
+          ${isSolved || state.teacherMode ? 'disabled' : ''}
+          autocomplete="off"
+        />
+        ${!isSolved && !state.teacherMode ? `
+          <button type="button" class="sub-grade-btn" data-part="${i}" style="padding:8px 14px;background:#6366f1;color:#fff;border:none;border-radius:8px;font-size:0.8rem;font-weight:bold;cursor:pointer;">
+            채점
+          </button>
+        ` : ''}
+      </div>
+
+      ${state.teacherMode && teacherAns ? `
+        <div style="margin-top:6px;padding:6px 10px;border-radius:6px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;font-size:0.75rem;font-weight:bold;">
+          🟢 교사용 정답: ${teacherAns}
+        </div>
+      ` : ''}
+    `;
+
     container.appendChild(row);
-    return;
+
+    const inputEl = row.querySelector(`#subAnswer-${i}`);
+    if (inputEl) {
+      inputEl.addEventListener('input', () => {
+        if (!state.subAnswers[problem.id]) state.subAnswers[problem.id] = {};
+        state.subAnswers[problem.id][i] = inputEl.value;
+        saveState();
+      });
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          gradeSubPart(problem.id, i);
+        }
+      });
+    }
+
+    const btn = row.querySelector('.sub-grade-btn');
+    if (btn) {
+      btn.addEventListener('click', () => gradeSubPart(problem.id, i));
+    }
   }
 
-  for (let i = 1; i <= subCount; i++) {
-    const isGraded = i === gradedPart;
-    const row = document.createElement('div');
-    row.className = `sub-answer-row${isGraded ? ' graded' : ''}`;
-
-    const subAnsText = teacherSubAnswers[i] || (isGraded ? problem.answer : '');
-
-    if (isGraded) {
-      row.innerHTML = `
-        <label class="answer-label" for="answerInput">
-          <span class="sub-num">(${i})</span> 답안
-          <span class="graded-badge">✅ 최종 채점 대상</span>
-        </label>
-        <input class="answer-input" type="text" id="answerInput" placeholder="답을 입력하세요..." autocomplete="off" />
-        ${state.teacherMode && subAnsText ? `
-          <div style="margin-top:6px;padding:6px 10px;border-radius:6px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;font-size:0.8rem;font-weight:bold;">
-            🟢 (${i})번 교사용 정답: ${subAnsText}
-          </div>` : ''}
-      `;
-    } else {
-      row.innerHTML = `
-        <label class="answer-label" for="subAnswer-${i}">
-          <span class="sub-num">(${i})</span> 답안 / 풀이 메모
-        </label>
-        <textarea class="answer-input sub-answer-textarea" id="subAnswer-${i}" rows="2" placeholder="이 소문제의 답이나 풀이 과정을 적어보세요 (채점되지 않아요)"></textarea>
-        ${state.teacherMode && subAnsText ? `
-          <div style="margin-top:6px;padding:6px 10px;border-radius:6px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);color:#4ade80;font-size:0.8rem;font-weight:bold;">
-            🟢 (${i})번 교사용 정답: ${subAnsText}
-          </div>` : ''}
-      `;
-    }
-    container.appendChild(row);
-
-    if (!isGraded) {
-      const ta = row.querySelector('textarea');
-      if (ta) {
-        ta.value = savedNotes[i] || '';
-        ta.addEventListener('input', () => {
-          if (!state.subAnswers[problem.id]) state.subAnswers[problem.id] = {};
-          state.subAnswers[problem.id][i] = ta.value;
-          saveState();
-        });
+  // 전체 일괄 채점 버튼
+  if (!state.teacherMode) {
+    const batchBtn = document.createElement('button');
+    batchBtn.type = 'button';
+    batchBtn.style.cssText = 'width:100%;margin-top:8px;padding:10px;border-radius:10px;background:linear-gradient(to right, #6366f1, #8b5cf6, #06b6d4);color:#fff;border:none;font-weight:bold;font-size:0.85rem;cursor:pointer;';
+    batchBtn.textContent = '⚡ 전체 소문제 일괄 채점하기';
+    batchBtn.addEventListener('click', () => {
+      for (let i = 1; i <= totalParts; i++) {
+        gradeSubPart(problem.id, i);
       }
-    }
+    });
+    container.appendChild(batchBtn);
   }
 }
 
 // ── 카드 생성 ──────────────────────────────
 function createCard(problem) {
-  const isSolved = state.solved[problem.id];
+  const subCount = getSubPartCount(problem);
+  const totalParts = subCount === 0 ? 1 : subCount;
+  let solvedParts = 0;
+  for (let i = 1; i <= totalParts; i++) {
+    if (state.solvedSubParts[`${problem.id}-${i}`]) solvedParts++;
+  }
+
+  const isSolved = solvedParts === totalParts || !!state.solved[problem.id];
   const isIncorrect = state.incorrect[problem.id] && !isSolved;
 
   const statusHtml = isSolved
-    ? `<span class="card-status status-solved">✓ 정답</span>`
-    : isIncorrect
-      ? `<span class="card-status status-incorrect">✗ 오답</span>`
-      : `<span class="card-status status-unsolved">미풀이</span>`;
+    ? `<span class="card-status status-solved">✓ 완료</span>`
+    : solvedParts > 0
+      ? `<span class="card-status" style="background:rgba(34,211,238,0.15);color:#22d3ee;border:1px solid rgba(34,211,238,0.3);">${solvedParts}/${totalParts} 해결</span>`
+      : isIncorrect
+        ? `<span class="card-status status-incorrect">✗ 오답</span>`
+        : `<span class="card-status status-unsolved">미풀이</span>`;
 
-  const teacherSub = SUB_ANSWERS_DATA[problem.id] || problem.subAnswers || {};
-  const hasSub = Object.keys(teacherSub).length > 1;
-
+  const conf = SUB_CONFIG[problem.id] || {};
   let teacherCardHtml = '';
   if (state.teacherMode) {
-    let subDetails = '';
-    if (hasSub) {
-      subDetails = Object.entries(teacherSub).map(([k, v]) => `
-        <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-          <strong style="color:#4ade80">(${k})</strong> ${v}
-        </div>
-      `).join('');
-    }
+    const subDetails = Object.entries(conf).map(([k, v]) => `
+      <div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        <strong style="color:#4ade80">(${k})</strong> ${v.answer}
+      </div>
+    `).join('');
 
     teacherCardHtml = `
       <div style="margin-top:8px;padding:8px 10px;background:rgba(74,222,128,0.12);border:1px solid rgba(74,222,128,0.3);border-radius:8px;font-size:0.75rem;color:#bbf7d0;">
-        <div style="font-weight:bold;color:#4ade80;margin-bottom:${hasSub ? '4px' : '0'};">🟢 최종 정답: ${problem.answer}</div>
-        ${hasSub ? `<div style="border-top:1px solid rgba(74,222,128,0.2);padding-top:4px;display:flex;flex-direction:column;gap:2px;">${subDetails}</div>` : ''}
+        <div style="font-weight:bold;color:#4ade80;margin-bottom:4px;">🟢 정답 요약</div>
+        <div style="border-top:1px solid rgba(74,222,128,0.2);padding-top:4px;display:flex;flex-direction:column;gap:2px;">${subDetails}</div>
       </div>
     `;
   }
@@ -281,7 +396,6 @@ function createCard(problem) {
   card.dataset.id = problem.id;
   card.setAttribute('role', 'button');
   card.setAttribute('tabindex', '0');
-  card.setAttribute('aria-label', `문제 ${problem.id}: ${problem.title}`);
 
   card.innerHTML = `
     <div class="card-top">
@@ -351,7 +465,7 @@ function openModal(problemId) {
   const overlay = document.getElementById('modalOverlay');
 
   document.getElementById('modalDifficulty').innerHTML = renderStars(problem.difficulty);
-  document.getElementById('modalPoints').textContent = `🏅 ${problem.points}점`;
+  document.getElementById('modalPoints').textContent = `🏅 총 ${problem.points}점`;
   document.getElementById('modalTitle').textContent = problem.title;
   document.getElementById('problemText').innerHTML = problem.problem;
 
@@ -367,76 +481,36 @@ function openModal(problemId) {
     hintBtn.textContent = '💡 힌트 보기';
   }
 
-  // submitGuide 표시
+  // 안내문 숨기기
   const guideEl = document.getElementById('submitGuideText');
-  if (guideEl) {
-    if (problem.submitGuide) {
-      guideEl.textContent = '📌 ' + problem.submitGuide;
-      guideEl.style.display = 'block';
-    } else {
-      guideEl.style.display = 'none';
-    }
-  }
+  if (guideEl) guideEl.style.display = 'none';
 
-  // 소문제별 답안 칸 및 선생님 정답 생성
+  // 소문제별 입력창 및 채점기 생성
   buildSubAnswers(problem);
 
-  // 답안 입력 초기화
-  const answerInput = document.getElementById('answerInput');
+  // 기본 단일제출 영역 숨기기
+  const singleSubmit = document.getElementById('answerInput');
+  if (singleSubmit && singleSubmit.parentElement) {
+    singleSubmit.parentElement.style.display = 'none';
+  }
   const submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) submitBtn.style.display = 'none';
+
   const feedback = document.getElementById('feedback');
+  if (feedback) feedback.style.display = 'none';
+
   const solutionSection = document.getElementById('solutionSection');
-
-  if (answerInput) answerInput.value = '';
-  feedback.className = 'feedback';
-  feedback.textContent = '';
-  solutionSection.classList.remove('visible');
-  document.getElementById('solutionText').innerHTML = '';
-
   const existingGameBtn = document.getElementById('marioGameBtn');
   if (existingGameBtn) existingGameBtn.remove();
 
-  // 선생님 모드: 정답 및 풀이 즉시 공개
-  if (state.teacherMode) {
-    if (answerInput) {
-      answerInput.disabled = true;
-      answerInput.value = '👨‍🏫 선생님 모드 활성 중';
-    }
-    if (submitBtn) submitBtn.disabled = true;
-
-    feedback.className = 'feedback correct';
-    feedback.innerHTML = `🎓 선생님 모드 &mdash; 최종 정답: <strong style="color:var(--green);font-size:1.15em">${problem.answer}</strong>`;
-
-    solutionSection.classList.add('visible');
-    document.getElementById('solutionText').innerHTML = problem.solution;
-
-    // 선생님 모드에서도 마리오 게임 버튼 제공
-    addMarioGameButton();
-
-    overlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
-    return;
-  }
-
-  // 이미 푼 문제
-  if (state.solved[problemId]) {
-    if (answerInput) {
-      answerInput.disabled = true;
-      answerInput.value = '✅ 이미 정답을 맞혔습니다!';
-    }
-    if (submitBtn) submitBtn.disabled = true;
-
-    feedback.className = 'feedback correct';
-    feedback.textContent = '🎉 정답입니다! 훌륭해요!';
+  // 이미 완료되었거나 선생님 모드인 경우 해설 표시
+  if (state.teacherMode || state.solved[problemId]) {
     solutionSection.classList.add('visible');
     document.getElementById('solutionText').innerHTML = problem.solution;
     addMarioGameButton();
   } else {
-    if (answerInput) {
-      answerInput.disabled = false;
-      setTimeout(() => answerInput.focus(), 150);
-    }
-    if (submitBtn) submitBtn.disabled = false;
+    solutionSection.classList.remove('visible');
+    document.getElementById('solutionText').innerHTML = '';
   }
 
   overlay.classList.add('open');
@@ -453,7 +527,6 @@ function addMarioGameButton() {
   document.getElementById('solutionSection').after(gameBtn);
 }
 
-// ── 모달 닫기 ─────────────────────────────
 function closeModal() {
   const overlay = document.getElementById('modalOverlay');
   overlay.classList.remove('open');
@@ -462,57 +535,7 @@ function closeModal() {
   renderGrid();
 }
 
-// ── 답안 제출 ─────────────────────────────
-function submitAnswer() {
-  const problemId = state.currentProblemId;
-  if (!problemId || typeof PROBLEMS === 'undefined') return;
-
-  const problem = PROBLEMS.find(p => p.id === problemId);
-  const answerInput = document.getElementById('answerInput');
-  if (!answerInput) return;
-
-  const userAnswer = answerInput.value.trim();
-
-  if (!userAnswer) {
-    answerInput.focus();
-    answerInput.style.borderColor = 'var(--pink)';
-    setTimeout(() => { answerInput.style.borderColor = ''; }, 1000);
-    return;
-  }
-
-  const feedback = document.getElementById('feedback');
-  const solutionSection = document.getElementById('solutionSection');
-  const submitBtn = document.getElementById('submitBtn');
-
-  const normalize = s => s.toLowerCase().replace(/\s/g, '').replace(/,/g, '');
-  const isCorrect = problem.answers.some(ans => normalize(userAnswer) === normalize(ans));
-
-  if (isCorrect) {
-    if (!state.solved[problemId]) {
-      state.solved[problemId] = true;
-      state.totalScore += problem.points;
-      delete state.incorrect[problemId];
-      saveState();
-    }
-    feedback.className = 'feedback correct';
-    feedback.textContent = `🎉 정답입니다! +${problem.points}점 획득!`;
-    solutionSection.classList.add('visible');
-    document.getElementById('solutionText').innerHTML = problem.solution;
-    answerInput.disabled = true;
-    if (submitBtn) submitBtn.disabled = true;
-    launchConfetti();
-    addMarioGameButton();
-  } else {
-    state.incorrect[problemId] = true;
-    saveState();
-    feedback.className = 'feedback wrong';
-    feedback.textContent = `❌ 오답입니다. 다시 한번 생각해보세요! (힌트를 활용해보세요 💡)`;
-  }
-
-  updateStats();
-}
-
-// ── 선생님 모드 관리 ────────────────────────
+// ── 선생님 모드 ───────────────────────────
 function openTeacherModal() {
   const overlay = document.getElementById('teacherModalOverlay');
   overlay.classList.add('open');
@@ -521,8 +544,6 @@ function openTeacherModal() {
     pwInput.value = '';
     setTimeout(() => pwInput.focus(), 150);
   }
-  const err = document.getElementById('teacherPwError');
-  if (err) err.textContent = '';
 }
 
 function closeTeacherModal() {
@@ -543,10 +564,7 @@ function activateTeacherMode() {
     lockBtn.textContent = '🔓';
   }
 
-  // 현재 모달이 열려있다면 즉시 답안 공개 갱신
-  if (state.currentProblemId) {
-    openModal(state.currentProblemId);
-  }
+  if (state.currentProblemId) openModal(state.currentProblemId);
   renderGrid();
 }
 
@@ -562,9 +580,7 @@ function deactivateTeacherMode() {
     lockBtn.textContent = '🔒';
   }
 
-  if (state.currentProblemId) {
-    openModal(state.currentProblemId);
-  }
+  if (state.currentProblemId) openModal(state.currentProblemId);
   renderGrid();
 }
 
@@ -610,18 +626,12 @@ function launchConfetti() {
   setTimeout(() => { overlay.innerHTML = ''; }, 3500);
 }
 
-// ── 배경 파티클 생성 ──────────────────────
 function createParticles() {
   const container = document.getElementById('bgParticles');
   if (!container) return;
   container.innerHTML = '';
   const symbols = ['∑', 'π', '∞', '√', '∫', 'Δ', '≈', '≠', '±'];
-  const colors = [
-    'rgba(124,92,252,0.15)',
-    'rgba(34,211,238,0.12)',
-    'rgba(244,114,182,0.1)',
-    'rgba(251,191,36,0.1)',
-  ];
+  const colors = ['rgba(124,92,252,0.15)', 'rgba(34,211,238,0.12)', 'rgba(244,114,182,0.1)', 'rgba(251,191,36,0.1)'];
 
   for (let i = 0; i < 16; i++) {
     const el = document.createElement('div');
@@ -644,12 +654,9 @@ function createParticles() {
   }
 }
 
-// ── 안전한 이벤트 헬퍼 함수 ────────────────
 function _on(id, event, handler) {
   const el = document.getElementById(id);
-  if (el) {
-    el.addEventListener(event, handler);
-  }
+  if (el) el.addEventListener(event, handler);
 }
 
 // ── DOM 초기화 ─────────────────────────────
@@ -657,13 +664,11 @@ document.addEventListener('DOMContentLoaded', () => {
   try { createParticles(); } catch (e) {}
   try { renderGrid(); } catch (e) {}
 
-  // 모달 닫기
   _on('modalClose', 'click', closeModal);
   _on('modalOverlay', 'click', e => {
     if (e.target === document.getElementById('modalOverlay')) closeModal();
   });
 
-  // ESC 키 닫기
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       closeModal();
@@ -672,7 +677,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 힌트 토글
   _on('hintBtn', 'click', () => {
     const hintContent = document.getElementById('hintContent');
     const hintBtn = document.getElementById('hintBtn');
@@ -688,35 +692,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 제출 버튼
-  _on('submitBtn', 'click', submitAnswer);
-
-  // Enter 키 제출: #answerInput이 동적 생성되므로 document에 위임 (핵심 수정!)
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target && e.target.id === 'answerInput') {
-      submitAnswer();
-    }
-  });
-
-  // 마리오 게임 창 닫기
   _on('marioClose', 'click', closeMarioGame);
   _on('marioOverlay', 'click', e => {
     if (e.target === document.getElementById('marioOverlay')) closeMarioGame();
   });
 
-  // 🔒 자물쇠(선생님 모드) 버튼 이벤트
   _on('teacherLockBtn', 'click', () => {
     if (state.teacherMode) deactivateTeacherMode();
     else openTeacherModal();
   });
 
-  // 선생님 비밀번호 모달 닫기
   _on('teacherModalClose', 'click', closeTeacherModal);
   _on('teacherModalOverlay', 'click', e => {
     if (e.target === document.getElementById('teacherModalOverlay')) closeTeacherModal();
   });
 
-  // 비밀번호 확인
   _on('teacherPwSubmit', 'click', () => {
     const pwInput = document.getElementById('teacherPwInput');
     const pw = pwInput ? pwInput.value : '';
@@ -727,13 +717,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (errEl) {
         errEl.textContent = '❌ 비밀번호가 올바르지 않습니다.';
         if (pwInput) pwInput.value = '';
-        if (pwInput) pwInput.focus();
         setTimeout(() => { errEl.textContent = ''; }, 2500);
       }
     }
   });
 
-  // 비밀번호 입력란 Enter 키
   _on('teacherPwInput', 'keydown', e => {
     if (e.key === 'Enter') {
       const submit = document.getElementById('teacherPwSubmit');
@@ -741,6 +729,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 선생님 모드 해제 배너 버튼
   _on('teacherModeOff', 'click', deactivateTeacherMode);
 });
