@@ -437,20 +437,34 @@ function createParticles() {
 }
 
 // ── 이벤트 리스너 ─────────────────────────
+// 요소가 없어도 에러로 나머지 이벤트 등록이 막히지 않도록 하는 안전한 바인더
+function _on(id, event, handler) {
+  const el = document.getElementById(id);
+  if (!el) {
+    console.warn(`[app.js] #${id} 요소를 찾을 수 없어 이벤트를 연결하지 못했습니다.`);
+    return;
+  }
+  try {
+    el.addEventListener(event, handler);
+  } catch (err) {
+    console.error(`[app.js] #${id} 이벤트 연결 중 오류:`, err);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // 파티클 생성
-  createParticles();
+  try { createParticles(); } catch (err) { console.error('[app.js] createParticles 오류:', err); }
 
   // 초기 그리드 렌더
-  renderGrid();
+  try { renderGrid(); } catch (err) { console.error('[app.js] renderGrid 오류:', err); }
 
   // 필터 버튼 — 제거됨
 
   // 모달 닫기 버튼
-  document.getElementById('modalClose').addEventListener('click', closeModal);
+  _on('modalClose', 'click', closeModal);
 
   // 오버레이 클릭으로 닫기
-  document.getElementById('modalOverlay').addEventListener('click', e => {
+  _on('modalOverlay', 'click', e => {
     if (e.target === document.getElementById('modalOverlay')) closeModal();
   });
 
@@ -460,7 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 힌트 버튼
-  document.getElementById('hintBtn').addEventListener('click', () => {
+  _on('hintBtn', 'click', () => {
     const hintContent = document.getElementById('hintContent');
     const hintBtn = document.getElementById('hintBtn');
     const pid = state.currentProblemId;
@@ -476,36 +490,36 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 제출 버튼
-  document.getElementById('submitBtn').addEventListener('click', submitAnswer);
+  _on('submitBtn', 'click', submitAnswer);
 
   // Enter 키로 제출
-  document.getElementById('answerInput').addEventListener('keydown', e => {
+  _on('answerInput', 'keydown', e => {
     if (e.key === 'Enter') submitAnswer();
   });
 
   // 마리오 게임 닫기 버튼
-  document.getElementById('marioClose').addEventListener('click', closeMarioGame);
+  _on('marioClose', 'click', closeMarioGame);
 
   // 마리오 오버레이 바깥 클릭으로 닫기
-  document.getElementById('marioOverlay').addEventListener('click', e => {
+  _on('marioOverlay', 'click', e => {
     if (e.target === document.getElementById('marioOverlay')) closeMarioGame();
   });
 
   // ── 선생님 모드 이벤트 ──
   // 🔒 버튼 클릭 → 모드 ON이면 해제, OFF이면 비번 모달
-  document.getElementById('teacherLockBtn').addEventListener('click', () => {
+  _on('teacherLockBtn', 'click', () => {
     if (state.teacherMode) deactivateTeacherMode();
     else openTeacherModal();
   });
 
   // 비번 모달 닫기
-  document.getElementById('teacherModalClose').addEventListener('click', closeTeacherModal);
-  document.getElementById('teacherModalOverlay').addEventListener('click', e => {
+  _on('teacherModalClose', 'click', closeTeacherModal);
+  _on('teacherModalOverlay', 'click', e => {
     if (e.target === document.getElementById('teacherModalOverlay')) closeTeacherModal();
   });
 
   // 비번 확인 버튼
-  document.getElementById('teacherPwSubmit').addEventListener('click', () => {
+  _on('teacherPwSubmit', 'click', () => {
     const pw = document.getElementById('teacherPwInput').value;
     if (_verifyTeacher(pw)) {
       activateTeacherMode();
@@ -519,10 +533,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 비번 입력 Enter 키
-  document.getElementById('teacherPwInput').addEventListener('keydown', e => {
+  _on('teacherPwInput', 'keydown', e => {
     if (e.key === 'Enter') document.getElementById('teacherPwSubmit').click();
   });
 
   // 선생님 모드 해제 배너 버튼
-  document.getElementById('teacherModeOff').addEventListener('click', deactivateTeacherMode);
+  _on('teacherModeOff', 'click', deactivateTeacherMode);
 });
